@@ -236,4 +236,4 @@ if __name__=="__main__":
         # con.insert(sql_insert)
 
     #7.保存table用于提供web接口
-    np.save("fraudsters.npy", table)
+    np.save("./fraudsters_zp/fraudsters.npy", table)

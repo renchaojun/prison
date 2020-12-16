@@ -5,7 +5,7 @@ class ReadConfig:
         if filepath:
             configpath = filepath
         else:
-            root_dir = os.path.dirname(os.path.abspath('.'))
+            root_dir = os.path.abspath('.')
             configpath = os.path.join(root_dir, "config.ini")
         self.cf = configparser.ConfigParser()
         self.cf.read(configpath)

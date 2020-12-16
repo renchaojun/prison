@@ -287,4 +287,4 @@ if __name__=="__main__":
     # print(len(table))
 
     # 7.保存table用于提供web接口
-    np.save("thieves.npy", table)
+    np.save("./thieves_dq/thieves.npy", table)

@@ -19,12 +19,12 @@ def process(type,code):
     adata=data[0]
     # 导出table
     if type=="thieves":
-        table=np.load("../thieves_dq/thieves.npy",allow_pickle=True)
+        table=np.load("./thieves_dq/thieves.npy",allow_pickle=True)
         print(table)
     elif type=="position":
-        table=np.load("../position_zw/position.npy",allow_pickle=True)
+        table=np.load("./position_zw/position.npy",allow_pickle=True)
     elif type=="fraudsters":
-        table=np.load("../fraudsters_zp/fraudsters.npy",allow_pickle=True)
+        table=np.load("./fraudsters_zp/fraudsters.npy",allow_pickle=True)
     else:
         return {"err":"参数错误!"}
     res={}
