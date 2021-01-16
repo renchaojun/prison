@@ -35,8 +35,13 @@ class DB():
     def insert(self,sql):
         mydb = self.get_connetion()
         mycursor = mydb.cursor()
-        mycursor.execute(sql)
-        mydb.commit()
+        try:
+            mycursor.execute(sql)
+            mydb.commit()
+        except Exception:  # 方法一：捕获所有异常
+            # 如果发生异常，则回滚
+            print("发生异常", Exception)
+            mydb.rollback()
         mydb.close()
     def select(self,sql):
         mydb = self.get_connetion()

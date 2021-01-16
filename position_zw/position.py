@@ -2,6 +2,9 @@ from openpyxl import load_workbook
 import utils.parse_config as u
 import numpy as np
 import utils.database as db
+import utils.save_to_json as sava_to_json
+import curPath
+import copy
 """
 处理职务犯
 1.数据读
@@ -10,9 +13,12 @@ import utils.database as db
 4.打标签  
 5.新建数据库
 6.数据写入
+7.命令行运行:export PYTHONPATH=$PYTHONPATH:./utils
+  #SET PYTHONPATH=%cd%;%cd%\
+
 """
 def read_position_excel(config):
-    position_path=config.get_filename("position_file")
+    position_path=curPath.mainPath()+config.get_filename("position_file")
     workbook = load_workbook(position_path)
     sheets = workbook.get_sheet_names()  # #四个sheet对应有四个维度,标签
     data={}   #存罪犯数据
@@ -81,21 +87,21 @@ def sum_score(data,*items):
         for i in range(len(items)):
             sum=0
             for j in items[i]:
-                sum+=adata[j]
+                sum+=int(float(adata[j]))
             inner_arr.append(sum)
         data[adata[0]]=np.hstack((data[adata[0]],np.array(inner_arr)))
 
     #处理inner_arr 进行评估是否含有这个标签
     return data
 
-def reverce_score(data,reverse_order):
+def reverce_score(data,reverse_order,score):
     for key in data:
         adata=data[key]
         for i in reverse_order:
-            adata[i]=5-adata[i]
+            adata[i]=score-int(float(adata[i]))
     return data
 
-def cul_flag(data,table,n,percent):
+def cul_flag(data,table,n,percent,static_map):
     """
     :param data: map
     :param table: one_dim list
@@ -115,6 +121,7 @@ def cul_flag(data,table,n,percent):
         lie=all_score_arr[:,j]
         lie.sort()
         basic_score.append(lie[round(len(lie)*(1-percent))])
+    static_map["boundary_score"]=basic_score
     # print(basic_score) #得到基准分数
     flag_map={}
     for key in data:
@@ -128,7 +135,7 @@ def cul_flag(data,table,n,percent):
                     flag_map[adata[0]].append(name)
                 else:
                     flag_map[adata[0]].append(name)
-    return flag_map
+    return flag_map,static_map
 def process_empty(table):
     num=0
     for i in range(len(table)):
@@ -151,13 +158,44 @@ def join(arr):
         s+=str(i)
         s+=";"
     return s
+def mean_and_std_min_max(data): # 1维数组numpy
+    #计算均值和标准差
+    mean=np.mean(data)
+    s=np.std(data)
+    min=np.min(data)
+    max=np.max(data)
+    return mean,s,min,max
+def static(static_map,data_map,table,start_basic,end_basic,start_form,end_form):
+    """
+    统计基本信息的集合以及数据的均值和标准差
+    :param static_map:
+    :param data_map:数据map[每个犯人编号,罪犯数据]
+    :param table:数据的title
+    :param start_basic:基本数据的开始
+    :param end_basic:基本数据的结束+1
+    :param start_form:表格问卷的开始
+    :param end_form:表格问卷的结束+1
+    :return:static_map  添加后返回
+    """
+    for i in range(start_basic,end_basic):#某列
+        info=list()
+        for key in data_map:
+            info.append(data_map[key][i])
+        static_map[table[i]]=copy.deepcopy(info)
+    for i in range(start_form,end_form):
+        arr=list()
+        for key in data_map:
+            arr.append(int(data_map[key][i]))
+        static_map[table[i]]=mean_and_std_min_max(np.array(arr))
+        # print(static_map[table[i]])
+    return static_map
+
 if __name__=="__main__":
     #1.读取总的数据表格
     config=u.ReadConfig()
     table,data=read_position_excel(config) #得到全部的列数据和表头
 
-
-    """总
+    """
     基本信息 [0:31]
     量表数据 [31:124]
     """
@@ -172,20 +210,21 @@ if __name__=="__main__":
     短式黑暗三联征:
     """
     reverse_order = np.array([11,16,20,24,26]) + 31 - 1
-    data = reverce_score(data, reverse_order)
+    data = reverce_score(data, reverse_order,5)
 
     three_feature_factor1=(np.array(range(1,10)))+31-1
     three_feature_factor2=(np.array(range(10,19)))+31-1
     three_feature_factor3=(np.array(range(19,28)))+31-1
+    three_feature_factor_all= np.concatenate((three_feature_factor1,three_feature_factor2,three_feature_factor3),axis=0)
     # 记分求和  短式黑暗三联征
-    title=np.array(["短式黑暗三联征:马基雅维利主义","短式黑暗三联征:精神病态","短式黑暗三联征:自恋"])
+    title=np.array(["短式黑暗三联征:马基雅维利主义","短式黑暗三联征:精神病态","短式黑暗三联征:自恋","整体具有某种黑暗特质"])
     n=n+len(title)
-    data=sum_score(data,three_feature_factor1,three_feature_factor2,three_feature_factor3)
+    data=sum_score(data,three_feature_factor1,three_feature_factor2,three_feature_factor3,three_feature_factor_all)
     table=np.hstack((table,title))
 
     #责任性量表**************************************************************************
     reverse_order=np.array([1,2,4,5,7,8,10,12])+58-1
-    data=reverce_score(data,reverse_order)
+    data=reverce_score(data,reverse_order,5)
     responsibility_factor1=np.array(range(28,40))++31-1
     title2=np.array(["责任感差"])
     data=sum_score(data,responsibility_factor1)
@@ -194,7 +233,7 @@ if __name__=="__main__":
 
     # # 心理特权感量表**************************************************************************
     reverse_order = np.array([5]) + 70 - 1
-    data = reverce_score(data, reverse_order)
+    data = reverce_score(data, reverse_order,5)
     psychological_factory1=np.array(range(1,10))+70-1
     title3 = np.array(["心理特权感水平高"])
     data = sum_score(data, psychological_factory1)
@@ -203,12 +242,13 @@ if __name__=="__main__":
 
     ## 物质主义价值观**************************************************************************
     reverse_order = np.array([2,3,5,6,10]) + 79 - 1
-    data = reverce_score(data, reverse_order)
+    data = reverce_score(data, reverse_order,5)
     money_factory1 = np.array([1,3,4,6,8]) + 79 -1
     money_factory2 = np.array([2,5,9,11,13]) + 79 -1
     money_factory3 = np.array([7,10,12]) + 79 -1
-    title4 = np.array(["物质主义价值观:以财物定义成功","物质主义价值观:以获取财物为中心","求物质主义价值观:通过获取财物追求幸福"])
-    data = sum_score(data, money_factory1,money_factory2,money_factory3)
+    money_factory_all = np.concatenate((money_factory1,money_factory2,money_factory3), axis=0)
+    title4 = np.array(["物质主义价值观:以财物定义成功","物质主义价值观:以获取财物为中心","物质主义价值观:通过获取财物追求幸福","物质主义整体水平高"])
+    data = sum_score(data, money_factory1,money_factory2,money_factory3,money_factory_all)
     table = np.hstack((table, title4))
     n=n+len(title4)
 
@@ -221,27 +261,37 @@ if __name__=="__main__":
     moral_factory6 = np.array([7,9,11,25]) + 92 - 1
     moral_factory7 = np.array([3,10,15,19]) + 92 - 1
     moral_factory8 = np.array([2,8,28,31]) + 92 - 1
+    moral_factory_all = np.concatenate((moral_factory1,moral_factory2,moral_factory3,moral_factory4,
+                                        moral_factory5,moral_factory6,moral_factory7,moral_factory8), axis=0)
     title5 = np.array(["道德推脱:道德辩护", "道德推脱:委婉标签", "道德推脱:有利比较",
                        "道德推脱:责任转移", "道德推脱:责任分散", "道德推脱:扭曲结果",
                        "道德推脱:责备归因", "道德推脱:非人性化",
+                       "整体道德推脱的水平高",
                        ])
     data = sum_score(data, moral_factory1, moral_factory2, moral_factory3,moral_factory4,moral_factory5,
-                     moral_factory6,moral_factory7,moral_factory8)
+                     moral_factory6,moral_factory7,moral_factory8,moral_factory_all)
     table = np.hstack((table, title5))
     n = n + len(title5)
+
+    # 3.5打标签之前做一次统计,并存入表格,便于后续生成其他的数据
+    # 生成统计意义上的{feature:均值,方差,min,max,基本信息:[基本信息集合],维度的标签阈值:[即大维度和小维度的得分阈值界限,超过即需要打标签]}
+    static_map={}
+    static_map=static(static_map,data,table,0,31,31,124)
+    #返回static_map后,还差各个大小维度总和的阈值,在步骤4中添加
+
+
     # 4.打标签
     table=np.hstack((table, np.array(["标签"])))
-    flag_map=cul_flag(data,table,n,0.27)
-    print("共计算了{}个小维度".format(n))
-
+    flag_map,static_map=cul_flag(data,table,n,0.27,static_map)
+    print("共计算了{}个大小维度".format(n))
     # print("每个犯人的标签:",flag_map)
 
 
     #5.建表
     position_table_name=config.get_tablename("position_name")
-    sql_createTb="create table {} (id int primary key auto_increment,`{}`char(20) not null default '',"+"`{}` char(20) not null default '',"*(len(table)-2) +"{} text(1000))CHARSET=utf8;"
+    sql_createTb="create table {} (id int primary key auto_increment,data_type int(1) ,`{}`char(20) not null default '',"+"`{}` char(20) not null default '',"*(len(table)-2) +"{} text(1000))CHARSET=utf8;"
     sql_createTb=sql_createTb.format(position_table_name,*table)
-    print(table)
+    # print(table)
     print(sql_createTb)
     con=db.DB()
     con.chech_table_exit(position_table_name,sql_createTb)
@@ -252,15 +302,17 @@ if __name__=="__main__":
     # print(flag_map)
     for key in data:
         adata=data[key]
-        sql_insert = "insert into {} values(default," + "'{}'," * (len(adata)) + "'{}');"
+        sql_insert = "insert into {} values(default,0," + "'{}'," * (len(adata)) + "'{}');"
         try:
             sql_insert=sql_insert.format(position_table_name,*adata,join(flag_map[key]))
         except:
             sql_insert=sql_insert.format(position_table_name,*adata,"无")
         print(sql_insert)
         # con.insert(sql_insert)
-    print(data)
-    print(len(table))
+    # print(data)  #{key(编号),value:数据}
+    # print(len(table))  #144条
 
     # 7.保存table用于提供web接口
-    np.save("./position_zw/position.npy", table)
+    np.save(curPath.mainPath()+"/position_zw/position.npy", table)
+    # 3.5+4步骤中的数据static_map进行保存
+    sava_to_json.save_json(static_map,curPath.mainPath()+"/temp_file/position_static_map")

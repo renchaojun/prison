@@ -8,7 +8,7 @@ class ReadConfig:
             root_dir = os.path.abspath('.')
             configpath = os.path.join(root_dir, "config.ini")
         self.cf = configparser.ConfigParser()
-        self.cf.read(configpath)
+        self.cf.read(configpath,encoding="utf-8")
 
     def get_db(self, param):
         value = self.cf.get("Mysql-Database", param)
@@ -20,6 +20,7 @@ class ReadConfig:
         return self.cf.get("Table-name",param)
 if __name__ == '__main__':
     test = ReadConfig()
+    print(test)
     t = test.get_db("host")
     t2 = test.get_filename("thieves_file")
     print(t)

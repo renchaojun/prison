@@ -2,6 +2,9 @@ from openpyxl import load_workbook
 import utils.parse_config as u
 import numpy as np
 import utils.database as db
+import utils.save_to_json as sava_to_json
+import curPath
+import position_zw.position as p
 """
 处理盗窃犯
 1.数据读
@@ -12,7 +15,7 @@ import utils.database as db
 6.数据写入
 """
 def read_thieves_excel(config):
-    thieves_path=config.get_filename("thieves_file")
+    thieves_path=curPath.mainPath()+config.get_filename("thieves_file")
     workbook = load_workbook(thieves_path)
     sheets = workbook.get_sheet_names()  # #四个sheet对应有四个维度,标签
     # print(sheets)
@@ -97,26 +100,17 @@ def sum_score(data,*items):
         for i in range(len(items)):
             sum=0
             for j in items[i]:
-                sum+=adata[j]
+                try:
+                    sum+=adata[j]
+                except:
+                    pass
             inner_arr.append(sum)
         data[adata[0]]=np.hstack((data[adata[0]],np.array(inner_arr)))
 
     #处理inner_arr 进行评估是否含有这个标签
     return data
 
-def reverce_score(data,reverse_order):
-    for key in data:
-        adata=data[key]
-        for i in reverse_order:
-            adata[i]=5-adata[i]
-    return data
-def reverce_score_bool(data,reverse_order):
-    for key in data:
-        adata=data[key]
-        for i in reverse_order:
-            adata[i]=1-adata[i]
-    return data
-def cul_flag(data,table,n,percent):
+def cul_flag(data,table,n,percent,static_map):
     """
     :param data: map
     :param table: one_dim list
@@ -136,6 +130,7 @@ def cul_flag(data,table,n,percent):
         lie=all_score_arr[:,j]
         lie.sort()
         basic_score.append(lie[round(len(lie)*(1-percent))])
+    static_map["boundary_score"]=basic_score
     # print(basic_score) #得到基准分数
     flag_map={}
     for key in data:
@@ -149,11 +144,10 @@ def cul_flag(data,table,n,percent):
                     flag_map[adata[0]].append(name)
                 else:
                     flag_map[adata[0]].append(name)
-    return flag_map
+    return flag_map,static_map
 def process_empty(table):
     num=0
     for i in range(len(table)):
-
         if table[i]==None:
             table[i]="空白栏{}".format(num)
             num=num+1
@@ -163,7 +157,7 @@ def process_empty(table):
             table[i] = "控制" + str(table[i])
         elif i>=162 and i<175:
             table[i] = "领悟" + str(table[i])
-        elif i>=176 and i<238:
+        elif i>=175 and i<238:
             table[i] = "应对" +str(table[i])
     return table
 def join(arr):
@@ -204,6 +198,9 @@ if __name__=="__main__":
     father_factor5=(np.array([3,8,22,64,65])-1)*2+11
     mother_factor5=(np.array([3,8,22,64,65])-1)*2+12
     father_factor6 = (np.array([3, 8, 22, 64, 65]) - 1) * 2 + 11
+    father_factor_all = np.concatenate((father_factor1,father_factor2,father_factor3,father_factor4,
+                                        father_factor5,father_factor6,mother_factor1,mother_factor2,
+                                        mother_factor3,mother_factor4,mother_factor5), axis=0)
     # print(data["14637李芸"][176:238])
     # 记分求和  父母教养方式
     title=np.array(["家庭教养方式:父亲情感温暖与理解关心","家庭教养方式:母亲情感温暖与理解关心",
@@ -212,37 +209,43 @@ if __name__=="__main__":
            "家庭教养方式:父亲惩罚严厉","家庭教养方式:母亲惩罚严厉",
            "家庭教养方式:父亲偏爱被试","家庭教养方式:母亲偏爱被试",
            "家庭教养方式:父亲过度保护",
+           "整体父母教养问题",
            ])
     n=n+len(title)
     data=sum_score(data,father_factor1,mother_factor1,father_factor2,mother_factor2,
               father_factor3,mother_factor3,father_factor4,mother_factor4,father_factor5,
-              mother_factor5,father_factor6)
+              mother_factor5,father_factor6,father_factor_all)
     table=np.hstack((table,title))
 
 
     # 自我控制量表**************************************************************************
     reverse_order=np.array([2,3,9,12,15,16])+146-1
-    data=reverce_score(data,reverse_order)
+    data=p.reverce_score(data,reverse_order,6)
     control_factor1=np.array([1,10,5,14])+146-1
     control_factor2=np.array([4,13,15,16,6,11])+146-1
     control_factor3=np.array([2,12,3,7,8,9])+146-1
-    title2=np.array(["自我控制:冲动冒险","自我控制:情绪性","自我控制:简单倾向"])
-    data=sum_score(data,control_factor1,control_factor2,control_factor3)
+    control_factor_all=np.concatenate((control_factor1,control_factor2,control_factor3), axis=0)
+    title2=np.array(["自我控制:冲动冒险","自我控制:情绪性","自我控制:简单倾向","整体自我控制能力差"])
+    data=sum_score(data,control_factor1,control_factor2,control_factor3,control_factor_all)
     table = np.hstack((table, title2))
     n=n+len(title2)
 
     # 领悟社会支持**************************************************************************
+    reverse_order=np.array([3,4,8,11,6,7,9,12,1,2,5,10])+163-1
+    data = p.reverce_score(data, reverse_order,7)
     society_factory1=np.array([3,4,8,11])+163-1
     society_factory2=np.array([6,7,9,12])+163-1
     society_factory3=np.array([1,2,5,10])+163-1
-    title3 = np.array(["领悟社会支持:家庭支持", "领悟社会支持:朋友支持", "领悟社会支持:其他支持"])
-    data = sum_score(data, society_factory1, society_factory2, society_factory3)
+    society_factory_all=np.concatenate((society_factory1,society_factory2,society_factory3), axis=0)
+    title3 = np.array(["领悟社会支持:缺乏家庭支持", "领悟社会支持:缺乏朋友支持", "领悟社会支持:缺乏其他支持","个体整体的社会支持低"])
+    data = sum_score(data, society_factory1, society_factory2, society_factory3,society_factory_all)
+
     table = np.hstack((table, title3))
     n=n+len(title3)
 
     # 应对方式问卷**************************************************************************
     reverse_order = np.array([1,2,3,5,8,19,29,31,40,46,51,55,10,11,14,36,39,48,50,56,57,59]) + 176 - 1
-    data = reverce_score_bool(data, reverse_order)
+    data = p.reverce_score(data, reverse_order,1)
     process_factory1 = np.array([1,2,3,5,8,19,29,31,40,46,51,55]) + 176 - 1
     process_factory2 = np.array([15,23,25,37,48,50,56,57,59]) + 176 - 1
     process_factory3 = np.array([10,11,14,36,39,48,50,56,57,59]) + 176 - 1
@@ -254,18 +257,38 @@ if __name__=="__main__":
     table = np.hstack((table, title4))
     n=n+len(title4)
 
+    # 3.5打标签之前做一次统计,并存入表格,便于后续生成其他的数据
+    # 生成统计意义上的{feature:均值,方差,min,max,基本信息:[基本信息集合],维度的标签阈值:[即大维度和小维度的得分阈值界限,超过即需要打标签]}
+    table = process_empty(table)
+    static_map = {}
+    # if i >= 11 and i < 143:
+    #     table[i] = "教养" + table[i]
+    # elif i >= 145 and i < 162:
+    #     table[i] = "控制" + str(table[i])
+    # elif i >= 162 and i < 175:
+    #     table[i] = "领悟" + str(table[i])
+    # elif i >= 175 and i < 238:
+    #     table[i] = "应对" + str(table[i])
+    static_map = p.static(static_map, data, table, 0, 11, 11, 143)
+    static_map["教养"]=[2]
+    static_map = p.static(static_map, data, table, 145, 146, 146, 162)
+    static_map["控制"] = [0]
+    static_map = p.static(static_map, data, table, 162, 163, 163, 175)
+    static_map["领悟"] = [0]
+    static_map = p.static(static_map, data, table, 175, 176, 176, 238)
+    static_map["应对"] = [2]
+    # 返回static_map后,还差各个大小维度总和的阈值,在步骤4中添加
 
     # 4.打标签
     table=np.hstack((table, np.array(["标签"])))
-    flag_map=cul_flag(data,table,n,0.27)
-    print("共计算了{}个小维度".format(n))
+    flag_map,static_map=cul_flag(data,table,n,0.27,static_map)
+    print("共计算了{}个大小维度".format(n))
     # print("每个犯人的标签:",flag_map)
 
 
     #5.建表
     thieves_table_name=config.get_tablename("thieves_name")
-    table=process_empty(table)
-    sql_createTb="create table {} (id int primary key auto_increment,`{}`char(10) not null default '',"+"`{}` char(8) not null default '',"*(len(table)-2) +"{} char(255) not null default '')CHARSET=utf8;"
+    sql_createTb="create table {} (id int primary key auto_increment,data_type int(1) ,`{}`char(10) not null default '',"+"`{}` char(8) not null default '',"*(len(table)-2) +"{} text(1000))CHARSET=utf8;"
     sql_createTb=sql_createTb.format(thieves_table_name,*table)
     # print(sql_createTb)
     con=db.DB()
@@ -276,15 +299,17 @@ if __name__=="__main__":
     # print(flag_map)
     for key in data:
         adata=data[key]
-        sql_insert = "insert into {} values(default," + "'{}'," * (len(adata)) + "'{}');"
+        sql_insert = "insert into {} values(default,0," + "'{}'," * (len(adata)) + "'{}');"
         try:
             sql_insert=sql_insert.format(thieves_table_name,*adata,join(flag_map[key]))
         except:
             sql_insert=sql_insert.format(thieves_table_name,*adata,"无")
         print(sql_insert)
         # con.insert(sql_insert)
-    # print(data)
+    print(data)
     # print(len(table))
 
     # 7.保存table用于提供web接口
-    np.save("./thieves_dq/thieves.npy", table)
+    np.save(curPath.mainPath()+"/thieves_dq/thieves.npy", table)
+    # 3.5+4步骤中的数据static_map进行保存
+    sava_to_json.save_json(static_map,curPath.mainPath()+"/temp_file/thieves_static_map")

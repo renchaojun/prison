@@ -2,6 +2,10 @@ from openpyxl import load_workbook
 import utils.parse_config as u
 import numpy as np
 import utils.database as db
+import curPath
+import copy
+import utils.save_to_json as sava_to_json
+import position_zw.position as p
 """
 处理诈骗犯
 1.数据读
@@ -12,7 +16,7 @@ import utils.database as db
 6.数据写入
 """
 def read_fraudsters_excel(config):
-    thieves_path=config.get_filename("fraudsters_file")
+    thieves_path=curPath.mainPath()+config.get_filename("fraudsters_file")
     workbook = load_workbook(thieves_path)
     sheets = workbook.get_sheet_names()  # #四个sheet对应有四个维度,标签
     # print(sheets)
@@ -52,8 +56,8 @@ def read_fraudsters_excel(config):
                     data[line[0]]=data[line[0]][:16]+line[3:]
 
             num_row = num_row + 1
-    for key in data:
-        print(data[key], len(data[key]))
+    # for key in data:
+    #     print(data[key], len(data[key]))
 
 
     return table,data
@@ -66,7 +70,6 @@ def wash_process(data):
     for key in data:
         arr.append(data[key])
     arr=np.asarray(arr)
-    # print(arr)
     #前面基本信息 [0:11]不处理,
     for j in range(len(arr[0])):
         if  (j>=3 and j<16) or (j>=16 and j<34):
@@ -112,14 +115,7 @@ def sum_score(data,*items):
     #处理inner_arr 进行评估是否含有这个标签
     return data
 
-def reverce_score(data,reverse_order):
-    for key in data:
-        adata=data[key]
-        for i in reverse_order:
-            adata[i]=5-adata[i]
-    return data
-
-def cul_flag(data,table,n,percent):
+def cul_flag(data,table,n,percent,static_map):
     """
     :param data: map
     :param table: one_dim list
@@ -142,6 +138,7 @@ def cul_flag(data,table,n,percent):
             basic_score.append(-1)
         else:
             basic_score.append(lie[round(len(lie)*(1-percent))])
+    static_map["boundary_score"] = basic_score
     # print(basic_score) #得到基准分数
     flag_map={}
     for key in data:
@@ -155,7 +152,7 @@ def cul_flag(data,table,n,percent):
                     flag_map[adata[0]].append(name)
                 else:
                     flag_map[adata[0]].append(name)
-    return flag_map
+    return flag_map,static_map
 def sum_score(data,*items):
     """
     :param data: map
@@ -184,6 +181,33 @@ def join(arr):
         s+=str(i)
         s+=";"
     return s
+
+def static(static_map,data_map,table,start_basic,end_basic,start_form,end_form):
+    """
+    统计基本信息的集合以及数据的均值和标准差
+    :param static_map:
+    :param data_map:数据map[每个犯人编号:罪犯数据]
+    :param table:数据的title
+    :param start_basic:基本数据的开始
+    :param end_basic:基本数据的结束+1
+    :param start_form:表格问卷的开始
+    :param end_form:表格问卷的结束+1
+    :return:static_map  添加后返回
+    """
+    for i in range(start_basic,end_basic):#某列
+        info=list()
+        for key in data_map:
+            info.append(data_map[key][i])
+        static_map[table[i]]=copy.deepcopy(info)
+    for i in range(start_form,end_form):
+        arr=list()
+        for key in data_map:
+            if data_map[key][i]!=-1:
+                arr.append(data_map[key][i])
+        # print(arr)
+        static_map[table[i]]=p.mean_and_std_min_max(np.array(arr))
+    return static_map
+
 if __name__=="__main__":
     #1.读取总的数据表格
     config=u.ReadConfig()
@@ -206,19 +230,25 @@ if __name__=="__main__":
     data=sum_score(data,factory1,factory2)
     table=np.hstack((table,title))
 
+    # 3.5打标签之前做一次统计,并存入表格,便于后续生成其他的数据
+    # 生成统计意义上的{feature:均值,方差,min,max,基本信息:[基本信息集合],维度的标签阈值:[即大维度和小维度的得分阈值界限,超过即需要打标签]}
+    static_map = {}
+    static_map = static(static_map, data, table, 0, 4, 4, 36)
+    # 返回static_map后,还差各个大小维度总和的阈值,在步骤4中添加
+
     # 4.打标签
     table=np.hstack((table, np.array(["标签"])))
-    flag_map=cul_flag(data,table,n,0.27)
+    flag_map,static_map=cul_flag(data,table,n,0.27,static_map)
     # print(flag_map)
     # print(data)
 
 
     # 5.建表
     fraudsters_table_name=config.get_tablename("fraudsters_name")
-    sql_createTb = "create table {} (id int primary key auto_increment,`{}`char(10) not null default ''," + "`{}` char(10) not null default ''," * (
+    sql_createTb = "create table {} (id int primary key auto_increment,data_type int(1) ,`{}`char(10) not null default ''," + "`{}` char(10) not null default ''," * (
                 len(table) - 2) + "{} char(255) not null default '')CHARSET=utf8;"
     sql_createTb = sql_createTb.format(fraudsters_table_name, *table)
-    print(sql_createTb)
+    # print(sql_createTb)
     con = db.DB()
     con.chech_table_exit(fraudsters_table_name, sql_createTb)
     # 6.数据写入
@@ -227,7 +257,7 @@ if __name__=="__main__":
     # print(flag_map)
     for key in data:
         adata = data[key]
-        sql_insert = "insert into {} values(default," + "'{}'," * (len(adata)) + "'{}');"
+        sql_insert = "insert into {} values(default,0," + "'{}'," * (len(adata)) + "'{}');"
         try:
             sql_insert = sql_insert.format(fraudsters_table_name, *adata, join(flag_map[key]))
         except:
@@ -236,4 +266,5 @@ if __name__=="__main__":
         # con.insert(sql_insert)
 
     #7.保存table用于提供web接口
-    np.save("./fraudsters_zp/fraudsters.npy", table)
+    np.save(curPath.mainPath()+"/fraudsters_zp/fraudsters.npy", table)
+    sava_to_json.save_json(static_map,curPath.mainPath()+"/temp_file/fraudsters_static_map")
