@@ -68,7 +68,7 @@ def wash_process(data):
     # print(arr)
     #前面基本信息 [0:11]不处理,
     for j in range(len(arr[0])):
-        if  (j>=11 and j<143) or (j>=146 and j<162) or (j>=163 and j<175)or (j>=176 and j<238):
+        if  (j>=12 and j<144) or (j>=147 and j<163) or (j>=164 and j<176)or (j>=177 and j<239):
             lie=arr[:,j]
             sum=0
             num=0
@@ -151,13 +151,13 @@ def process_empty(table):
         if table[i]==None:
             table[i]="空白栏{}".format(num)
             num=num+1
-        if i>=11 and i<143:
+        if i>=12 and i<144:
             table[i]="教养"+table[i]
-        elif i>=145 and i<162:
+        elif i>=146 and i<163:
             table[i] = "控制" + str(table[i])
-        elif i>=162 and i<175:
+        elif i>=163 and i<176:
             table[i] = "领悟" + str(table[i])
-        elif i>=175 and i<238:
+        elif i>=176 and i<239:
             table[i] = "应对" +str(table[i])
     return table
 def join(arr):
@@ -170,13 +170,12 @@ if __name__=="__main__":
     #1.读取总的数据表格
     config=u.ReadConfig()
     table,data=read_thieves_excel(config) #得到全部的列数据和表头
-
     """
-    基本信息 [0:11]
-    父母教养方式:[11:143]
-    自我控制量表:[146:162]
-    领悟社会支持:[163:175]
-    应对方式问卷:[176:238]
+    基本信息 [0:12]
+    父母教养方式:[12:144]
+    自我控制量表:[147:163]
+    领悟社会支持:[164:176]
+    应对方式问卷:[177:239]
     """
     # 2.数据清洗
     data=wash_process(data)  #
@@ -187,21 +186,21 @@ if __name__=="__main__":
     n=0
     # 3.计算维度得分
     # 父母教养方式**************************************************************************
-    father_factor1=(np.array([2,4,6,7,9,15,20,25,29,30,31,32,33,37,42,54,60,61,66])-1)*2+11
-    mother_factor1=(np.array([2,4,6,7,9,15,25,29,30,31,32,33,37,42,44,54,60,61,63])-1)*2+12
-    father_factor2=(np.array([1,10,11,14,27,36,48,50,56,57])-1)*2+11
-    mother_factor2=(np.array([1,11,12,14,16,19,24,27,35,36,41,48,50,56,57,59])-1)*2+12
-    father_factor3=(np.array([21,23,28,34,35,45])-1)*2+11
-    mother_factor3=(np.array([23,26,28,34,38,39,45,47])-1)*2+12
-    father_factor4=(np.array([5,13,17,18,43,49,51,52,53,55,58,62])-1)*2+11
-    mother_factor4=(np.array([13,17,43,51,52,53,55,58,62])-1)*2+12
-    father_factor5=(np.array([3,8,22,64,65])-1)*2+11
-    mother_factor5=(np.array([3,8,22,64,65])-1)*2+12
-    father_factor6 = (np.array([3, 8, 22, 64, 65]) - 1) * 2 + 11
+    father_factor1=(np.array([2,4,6,7,9,15,20,25,29,30,31,32,33,37,42,54,60,61,66])-1)*2+12
+    mother_factor1=(np.array([2,4,6,7,9,15,25,29,30,31,32,33,37,42,44,54,60,61,63])-1)*2+13
+    father_factor2=(np.array([1,10,11,14,27,36,48,50,56,57])-1)*2+12
+    mother_factor2=(np.array([1,11,12,14,16,19,24,27,35,36,41,48,50,56,57,59])-1)*2+13
+    father_factor3=(np.array([21,23,28,34,35,45])-1)*2+12
+    mother_factor3=(np.array([23,26,28,34,38,39,45,47])-1)*2+13
+    father_factor4=(np.array([5,13,17,18,43,49,51,52,53,55,58,62])-1)*2+12
+    mother_factor4=(np.array([13,17,43,51,52,53,55,58,62])-1)*2+13
+    father_factor5=(np.array([3,8,22,64,65])-1)*2+12
+    mother_factor5=(np.array([3,8,22,64,65])-1)*2+13
+    father_factor6 = (np.array([3, 8, 22, 64, 65]) - 1) * 2 + 12
     father_factor_all = np.concatenate((father_factor1,father_factor2,father_factor3,father_factor4,
                                         father_factor5,father_factor6,mother_factor1,mother_factor2,
                                         mother_factor3,mother_factor4,mother_factor5), axis=0)
-    # print(data["14637李芸"][176:238])
+    # print(data["14637李芸"][177:239])
     # 记分求和  父母教养方式
     title=np.array(["家庭教养方式:父亲情感温暖与理解关心","家庭教养方式:母亲情感温暖与理解关心",
            "家庭教养方式:父亲过分干涉","家庭教养方式:母亲过度干涉",
@@ -219,11 +218,11 @@ if __name__=="__main__":
 
 
     # 自我控制量表**************************************************************************
-    reverse_order=np.array([2,3,9,12,15,16])+146-1
+    reverse_order=np.array([2,3,9,12,15,16])+147-1
     data=p.reverce_score(data,reverse_order,6)
-    control_factor1=np.array([1,10,5,14])+146-1
-    control_factor2=np.array([4,13,15,16,6,11])+146-1
-    control_factor3=np.array([2,12,3,7,8,9])+146-1
+    control_factor1=np.array([1,10,5,14])+147-1
+    control_factor2=np.array([4,13,15,16,6,11])+147-1
+    control_factor3=np.array([2,12,3,7,8,9])+147-1
     control_factor_all=np.concatenate((control_factor1,control_factor2,control_factor3), axis=0)
     title2=np.array(["自我控制:冲动冒险","自我控制:情绪性","自我控制:简单倾向","整体自我控制能力差"])
     data=sum_score(data,control_factor1,control_factor2,control_factor3,control_factor_all)
@@ -231,11 +230,11 @@ if __name__=="__main__":
     n=n+len(title2)
 
     # 领悟社会支持**************************************************************************
-    reverse_order=np.array([3,4,8,11,6,7,9,12,1,2,5,10])+163-1
+    reverse_order=np.array([3,4,8,11,6,7,9,12,1,2,5,10])+164-1
     data = p.reverce_score(data, reverse_order,7)
-    society_factory1=np.array([3,4,8,11])+163-1
-    society_factory2=np.array([6,7,9,12])+163-1
-    society_factory3=np.array([1,2,5,10])+163-1
+    society_factory1=np.array([3,4,8,11])+164-1
+    society_factory2=np.array([6,7,9,12])+164-1
+    society_factory3=np.array([1,2,5,10])+164-1
     society_factory_all=np.concatenate((society_factory1,society_factory2,society_factory3), axis=0)
     title3 = np.array(["领悟社会支持:缺乏家庭支持", "领悟社会支持:缺乏朋友支持", "领悟社会支持:缺乏其他支持","个体整体的社会支持低"])
     data = sum_score(data, society_factory1, society_factory2, society_factory3,society_factory_all)
@@ -244,14 +243,14 @@ if __name__=="__main__":
     n=n+len(title3)
 
     # 应对方式问卷**************************************************************************
-    reverse_order = np.array([1,2,3,5,8,19,29,31,40,46,51,55,10,11,14,36,39,48,50,56,57,59]) + 176 - 1
+    reverse_order = np.array([1,2,3,5,8,19,29,31,40,46,51,55,10,11,14,36,39,48,50,56,57,59]) + 177 - 1
     data = p.reverce_score(data, reverse_order,1)
-    process_factory1 = np.array([1,2,3,5,8,19,29,31,40,46,51,55]) + 176 - 1
-    process_factory2 = np.array([15,23,25,37,48,50,56,57,59]) + 176 - 1
-    process_factory3 = np.array([10,11,14,36,39,48,50,56,57,59]) + 176 - 1
-    process_factory4 = np.array([4,12,17,21,22,26,28,41,45,49]) + 176 - 1
-    process_factory5 = np.array([7,13,16,19,24,27,32,34,35,44,47]) + 176 - 1
-    process_factory6 = np.array([6,9,18,20,30,33,38,52,54,58,61]) + 176 - 1
+    process_factory1 = np.array([1,2,3,5,8,19,29,31,40,46,51,55]) + 177 - 1
+    process_factory2 = np.array([15,23,25,37,48,50,56,57,59]) + 177 - 1
+    process_factory3 = np.array([10,11,14,36,39,48,50,56,57,59]) + 177 - 1
+    process_factory4 = np.array([4,12,17,21,22,26,28,41,45,49]) + 177 - 1
+    process_factory5 = np.array([7,13,16,19,24,27,32,34,35,44,47]) + 177 - 1
+    process_factory6 = np.array([6,9,18,20,30,33,38,52,54,58,61]) + 177 - 1
     title4 = np.array(["应对方式:不擅长解决问题","应对方式:自责","应对方式:不擅长求助","应对方式:幻想","应对方式:退避","应对方式:合理化"])
     data = sum_score(data, process_factory1, process_factory2, process_factory3,process_factory4,process_factory5,process_factory6)
     table = np.hstack((table, title4))
@@ -261,21 +260,13 @@ if __name__=="__main__":
     # 生成统计意义上的{feature:均值,方差,min,max,基本信息:[基本信息集合],维度的标签阈值:[即大维度和小维度的得分阈值界限,超过即需要打标签]}
     table = process_empty(table)
     static_map = {}
-    # if i >= 11 and i < 143:
-    #     table[i] = "教养" + table[i]
-    # elif i >= 145 and i < 162:
-    #     table[i] = "控制" + str(table[i])
-    # elif i >= 162 and i < 175:
-    #     table[i] = "领悟" + str(table[i])
-    # elif i >= 175 and i < 238:
-    #     table[i] = "应对" + str(table[i])
-    static_map = p.static(static_map, data, table, 0, 11, 11, 143)
+    static_map = p.static(static_map, data, table, 0, 12, 12, 144)
     static_map["教养"]=[2]
-    static_map = p.static(static_map, data, table, 145, 146, 146, 162)
+    static_map = p.static(static_map, data, table, 146, 147, 147, 163)
     static_map["控制"] = [0]
-    static_map = p.static(static_map, data, table, 162, 163, 163, 175)
+    static_map = p.static(static_map, data, table, 163, 164, 164, 176)
     static_map["领悟"] = [0]
-    static_map = p.static(static_map, data, table, 175, 176, 176, 238)
+    static_map = p.static(static_map, data, table, 176, 177, 177, 239)
     static_map["应对"] = [2]
     # 返回static_map后,还差各个大小维度总和的阈值,在步骤4中添加
 
@@ -305,8 +296,9 @@ if __name__=="__main__":
         except:
             sql_insert=sql_insert.format(thieves_table_name,*adata,"无")
         print(sql_insert)
-        # con.insert(sql_insert)
-    print(data)
+        con.insert(sql_insert)
+    # print(table)
+    # print(data)
     # print(len(table))
 
     # 7.保存table用于提供web接口

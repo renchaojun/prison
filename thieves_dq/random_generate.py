@@ -104,21 +104,21 @@ if __name__ == '__main__':
     # 3.计算总分, 按照打标签static_map中最后一项阈值, 完成打标
     n=0
  # 父母教养方式**************************************************************************
-    father_factor1=(np.array([2,4,6,7,9,15,20,25,29,30,31,32,33,37,42,54,60,61,66])-1)*2+11
-    mother_factor1=(np.array([2,4,6,7,9,15,25,29,30,31,32,33,37,42,44,54,60,61,63])-1)*2+12
-    father_factor2=(np.array([1,10,11,14,27,36,48,50,56,57])-1)*2+11
-    mother_factor2=(np.array([1,11,12,14,16,19,24,27,35,36,41,48,50,56,57,59])-1)*2+12
-    father_factor3=(np.array([21,23,28,34,35,45])-1)*2+11
-    mother_factor3=(np.array([23,26,28,34,38,39,45,47])-1)*2+12
-    father_factor4=(np.array([5,13,17,18,43,49,51,52,53,55,58,62])-1)*2+11
-    mother_factor4=(np.array([13,17,43,51,52,53,55,58,62])-1)*2+12
-    father_factor5=(np.array([3,8,22,64,65])-1)*2+11
-    mother_factor5=(np.array([3,8,22,64,65])-1)*2+12
-    father_factor6 = (np.array([3, 8, 22, 64, 65]) - 1) * 2 + 11
+    father_factor1=(np.array([2,4,6,7,9,15,20,25,29,30,31,32,33,37,42,54,60,61,66])-1)*2+12
+    mother_factor1=(np.array([2,4,6,7,9,15,25,29,30,31,32,33,37,42,44,54,60,61,63])-1)*2+13
+    father_factor2=(np.array([1,10,11,14,27,36,48,50,56,57])-1)*2+12
+    mother_factor2=(np.array([1,11,12,14,16,19,24,27,35,36,41,48,50,56,57,59])-1)*2+13
+    father_factor3=(np.array([21,23,28,34,35,45])-1)*2+12
+    mother_factor3=(np.array([23,26,28,34,38,39,45,47])-1)*2+13
+    father_factor4=(np.array([5,13,17,18,43,49,51,52,53,55,58,62])-1)*2+12
+    mother_factor4=(np.array([13,17,43,51,52,53,55,58,62])-1)*2+13
+    father_factor5=(np.array([3,8,22,64,65])-1)*2+12
+    mother_factor5=(np.array([3,8,22,64,65])-1)*2+13
+    father_factor6 = (np.array([3, 8, 22, 64, 65]) - 1) * 2 + 12
     father_factor_all = np.concatenate((father_factor1,father_factor2,father_factor3,father_factor4,
                                         father_factor5,father_factor6,mother_factor1,mother_factor2,
                                         mother_factor3,mother_factor4,mother_factor5), axis=0)
-    # print(data["14637李芸"][176:238])
+    # print(data["14637李芸"][177:239])
     # 记分求和  父母教养方式
     n=n+12
     data=th.sum_score(data,father_factor1,mother_factor1,father_factor2,mother_factor2,
@@ -126,34 +126,34 @@ if __name__ == '__main__':
               mother_factor5,father_factor6,father_factor_all)
 
     # 自我控制量表**************************************************************************
-    reverse_order = np.array([2, 3, 9, 12, 15, 16]) + 146 - 1
+    reverse_order = np.array([2, 3, 9, 12, 15, 16]) + 147 - 1
     data = p.reverce_score(data, reverse_order, 6)
-    control_factor1 = np.array([1, 10, 5, 14]) + 146 - 1
-    control_factor2 = np.array([4, 13, 15, 16, 6, 11]) + 146 - 1
-    control_factor3 = np.array([2, 12, 3, 7, 8, 9]) + 146 - 1
+    control_factor1 = np.array([1, 10, 5, 14]) + 147 - 1
+    control_factor2 = np.array([4, 13, 15, 16, 6, 11]) + 147 - 1
+    control_factor3 = np.array([2, 12, 3, 7, 8, 9]) + 147 - 1
     control_factor_all = np.concatenate((control_factor1, control_factor2, control_factor3), axis=0)
     data = th.sum_score(data, control_factor1, control_factor2, control_factor3, control_factor_all)
     n = n + 4
     # 领悟社会支持**************************************************************************
-    reverse_order = np.array([3, 4, 8, 11, 6, 7, 9, 12, 1, 2, 5, 10]) + 163 - 1
+    reverse_order = np.array([3, 4, 8, 11, 6, 7, 9, 12, 1, 2, 5, 10]) + 164 - 1
     data = p.reverce_score(data, reverse_order, 6)
-    society_factory1 = np.array([3, 4, 8, 11]) + 163 - 1
-    society_factory2 = np.array([6, 7, 9, 12]) + 163 - 1
-    society_factory3 = np.array([1, 2, 5, 10]) + 163 - 1
+    society_factory1 = np.array([3, 4, 8, 11]) + 164 - 1
+    society_factory2 = np.array([6, 7, 9, 12]) + 164 - 1
+    society_factory3 = np.array([1, 2, 5, 10]) + 164 - 1
     society_factory_all = np.concatenate((society_factory1, society_factory2, society_factory3), axis=0)
     data = th.sum_score(data, society_factory1, society_factory2, society_factory3, society_factory_all)
     n = n + 4
 
     # 应对方式问卷**************************************************************************
     reverse_order = np.array(
-        [1, 2, 3, 5, 8, 19, 29, 31, 40, 46, 51, 55, 10, 11, 14, 36, 39, 48, 50, 56, 57, 59]) + 176 - 1
+        [1, 2, 3, 5, 8, 19, 29, 31, 40, 46, 51, 55, 10, 11, 14, 36, 39, 48, 50, 56, 57, 59]) + 177 - 1
     data = p.reverce_score(data, reverse_order,1)
-    process_factory1 = np.array([1, 2, 3, 5, 8, 19, 29, 31, 40, 46, 51, 55]) + 176 - 1
-    process_factory2 = np.array([15, 23, 25, 37, 48, 50, 56, 57, 59]) + 176 - 1
-    process_factory3 = np.array([10, 11, 14, 36, 39, 48, 50, 56, 57, 59]) + 176 - 1
-    process_factory4 = np.array([4, 12, 17, 21, 22, 26, 28, 41, 45, 49]) + 176 - 1
-    process_factory5 = np.array([7, 13, 16, 19, 24, 27, 32, 34, 35, 44, 47]) + 176 - 1
-    process_factory6 = np.array([6, 9, 18, 20, 30, 33, 38, 52, 54, 58, 61]) + 176 - 1
+    process_factory1 = np.array([1, 2, 3, 5, 8, 19, 29, 31, 40, 46, 51, 55]) + 177 - 1
+    process_factory2 = np.array([15, 23, 25, 37, 48, 50, 56, 57, 59]) + 177 - 1
+    process_factory3 = np.array([10, 11, 14, 36, 39, 48, 50, 56, 57, 59]) + 177 - 1
+    process_factory4 = np.array([4, 12, 17, 21, 22, 26, 28, 41, 45, 49]) + 177 - 1
+    process_factory5 = np.array([7, 13, 16, 19, 24, 27, 32, 34, 35, 44, 47]) + 177 - 1
+    process_factory6 = np.array([6, 9, 18, 20, 30, 33, 38, 52, 54, 58, 61]) + 177 - 1
     data = th.sum_score(data, process_factory1, process_factory2, process_factory3, process_factory4, process_factory5,
                      process_factory6)
     n = n + 6
