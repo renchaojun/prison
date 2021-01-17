@@ -21,7 +21,7 @@ import position_zw.random_generate as pr
 """
 if __name__ == '__main__':
     # 生成1k条虚拟数据
-    N = 1000
+    N = 1100
     # 1.读取统计文件position_static_map.json
     static_map = sava_to_json.load_json(curPath.mainPath() + "/temp_file/fraudsters_static_map")
     print(len(static_map))
@@ -35,7 +35,8 @@ if __name__ == '__main__':
         data[id].append(id) #"罪犯编号"
         data[id].append(random.choice(static_map["队别"]))
         data[id].append(pr.random_name())
-        data[id].append(random.choice(static_map["实验室编号"]))
+        data[id].append(random.choice(static_map["受教育"]))
+        data[id].append(random.choice(static_map["年龄"]))
         flag=random.choice(range(2))
         if flag==0:
             #12个维度
@@ -57,8 +58,8 @@ if __name__ == '__main__':
 
     # 3.计算总分, 按照打标签static_map中最后一项阈值, 完成打标签
     n = 0
-    factory1 = (np.array(range(4, 16)))  # 只打第一个标签
-    factory2 = (np.array(range(16, 34)))  # 只打第二个标签
+    factory1 = (np.array(range(5, 17)))  # 只打第一个标签
+    factory2 = (np.array(range(17, 35)))  # 只打第二个标签
     n +=2
     data = f.sum_score(data, factory1, factory2)
     #---------------------------生成数据并求维度的和完毕-------------------------------------------

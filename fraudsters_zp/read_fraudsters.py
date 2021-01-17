@@ -26,7 +26,7 @@ def read_fraudsters_excel(config):
     for i in range(sheet_size):  #先算好标签
         booksheet = workbook.get_sheet_by_name(sheets[i])
         rows = booksheet.rows
-        # 迭代所有的行
+        # 迭代所有的行,得到所有的标签
         num_row = 0
         for row in rows:
             if num_row == 0:
@@ -34,10 +34,8 @@ def read_fraudsters_excel(config):
                 if i==0:
                     table=table+line
                 else:
-                    table=table+line[3:]
+                    table=table+line[5:]
                 num_row =num_row +1
-    print(table)
-    print(len(table))  #16+21  -3
     for i in range(sheet_size):  #再计算里面的数据
         booksheet = workbook.get_sheet_by_name(sheets[i])
         rows = booksheet.rows
@@ -51,15 +49,10 @@ def read_fraudsters_excel(config):
                     if i==0:
                         data[line[0]]+=(line+[-1 for _ in range(len(table)-len(line))])
                     else:
-                        data[line[0]]+=(line[:3]+[-1 for _ in range(len(table)-len(line))]+line[3:])
+                        data[line[0]]+=(line[:5]+[-1 for _ in range(len(table)-len(line))]+line[5:])
                 else:
-                    data[line[0]]=data[line[0]][:16]+line[3:]
-
+                    data[line[0]]=data[line[0]][:17]+line[5:]
             num_row = num_row + 1
-    # for key in data:
-    #     print(data[key], len(data[key]))
-
-
     return table,data
 def wash_process(data):
     """
@@ -214,17 +207,16 @@ if __name__=="__main__":
     table,data=read_fraudsters_excel(config) #得到全部的列数据和表头
     """
     16+21 两个量表的列
-    基本信息:[0:3]
-    恶意创造力:[3:16]
-    马氏+自恋:[16:34]
+    基本信息:[0:5]
+    恶意创造力:[5:17]
+    马氏+自恋:[17:36]
     """
-
     # 2.数据清洗
     data = wash_process(data)
     # 3.计算维度得分
     n=0
-    factory1=(np.array(range(4,16)))  #只打第一个标签
-    factory2=(np.array(range(16,34))) #只打第二个标签
+    factory1=(np.array(range(5,17)))  #只打第一个标签
+    factory2=(np.array(range(17,35))) #只打第二个标签
     title=np.array(['恶意创造力','马氏+自恋'])
     n+=len(title)
     data=sum_score(data,factory1,factory2)
@@ -233,7 +225,7 @@ if __name__=="__main__":
     # 3.5打标签之前做一次统计,并存入表格,便于后续生成其他的数据
     # 生成统计意义上的{feature:均值,方差,min,max,基本信息:[基本信息集合],维度的标签阈值:[即大维度和小维度的得分阈值界限,超过即需要打标签]}
     static_map = {}
-    static_map = static(static_map, data, table, 0, 4, 4, 36)
+    static_map = static(static_map, data, table, 0, 5, 5, 35)
     # 返回static_map后,还差各个大小维度总和的阈值,在步骤4中添加
 
     # 4.打标签
@@ -263,7 +255,7 @@ if __name__=="__main__":
         except:
             sql_insert = sql_insert.format(fraudsters_table_name, *adata, "无")
         print(sql_insert)
-        # con.insert(sql_insert)
+        con.insert(sql_insert)
 
     #7.保存table用于提供web接口
     np.save(curPath.mainPath()+"/fraudsters_zp/fraudsters.npy", table)
