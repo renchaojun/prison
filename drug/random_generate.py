@@ -16,10 +16,28 @@ import position_zw.random_generate as pr
 3.计算总分,按照打标签static_map中最后一项阈值,完成打标签
 4.构造sql,写入数据库
 """
+def sum_score(data,*items):
+    """
+    :param data: map
+    :param items: tuple
+    :return:
+    """
+    # print(data)
+    for key in data.keys():
+        inner_arr=[] #一个犯人的得分
+        adata=data[int(key)]
+        for i in range(len(items)):
+            sum=0
+            for j in items[i]:
+                sum+=int(float(adata[j]))
+            inner_arr.append(sum)
+        data[int(adata[0])]=np.hstack((data[int(adata[0])],np.array(inner_arr)))
 
+    #处理inner_arr 进行评估是否含有这个标签
+    return data
 if __name__ == '__main__':
     # 生成1k条虚拟数据
-    N = 1000
+    N = 1100
     # 1.读取统计文件drug_static_map.json
     static_map = sava_to_json.load_json(curPath.mainPath() + "/temp_file/drug_static_map")
 
@@ -29,54 +47,56 @@ if __name__ == '__main__':
     for i in range(N):
         my_id = base_id + i
         data[my_id] = [my_id]
+        data[my_id].append(random.choice(static_map["年龄"]))
+        data[my_id].append(random.choice(static_map["文化程度"]))
+        data[my_id].append(random.choice(static_map["罪名"]))
         for key in static_map:
             if len(static_map[key])==4:
-                data[base_id + i].append(pr.random_normal(static_map, key))
-    # print(data)
+                data[my_id].append(pr.random_normal(static_map, key))
 
     # 3.计算总分, 按照打标签static_map中最后一项阈值, 完成打标签
     n = 0
     """
-       短式黑暗三联征:马基雅维利主义人格[1,10)
+       短式黑暗三联征:马基雅维利主义人格[1,10)+3
     """
-    three_feature_factor = (np.array(range(1, 10)))
+    three_feature_factor = (np.array(range(1, 10)))+3
     # 记分求和  短式黑暗三联征:马基雅维利主义人格
     n = n + 1
-    data = p.sum_score(data, three_feature_factor)
+    data =sum_score(data, three_feature_factor)
     """
         奖励/惩罚敏感性问卷
     """
-    sensitive = np.array(range(1, 49, 2)) + 10 - 1  # 惩罚敏感
-    sensitive2 = np.array(range(2, 49, 2)) + 10 - 1  # 奖励敏感
-    data = p.sum_score(data, sensitive, sensitive2)
+    sensitive = np.array(range(1, 49, 2)) + 13 - 1  # 惩罚敏感
+    sensitive2 = np.array(range(2, 49, 2)) + 13 - 1  # 奖励敏感
+    data = sum_score(data, sensitive, sensitive2)
     n = n + 2
 
     """
         领悟社会支持
     """
-    reverse_order = np.array([3, 4, 8, 11, 6, 7, 9, 12, 1, 2, 5, 10]) + 58 - 1
+    reverse_order = np.array([3, 4, 8, 11, 6, 7, 9, 12, 1, 2, 5, 10]) + 61 - 1
     data = p.reverce_score(data, reverse_order, 7)
-    society_factory1 = np.array([3, 4, 8, 11]) + 58 - 1
-    society_factory2 = np.array([6, 7, 9, 12]) + 58 - 1
-    society_factory3 = np.array([1, 2, 5, 10]) + 58 - 1
+    society_factory1 = np.array([3, 4, 8, 11]) + 61 - 1
+    society_factory2 = np.array([6, 7, 9, 12]) + 61 - 1
+    society_factory3 = np.array([1, 2, 5, 10]) + 61 - 1
     society_factory_all = np.concatenate((society_factory1, society_factory2, society_factory3), axis=0)
-    data = p.sum_score(data, society_factory1, society_factory2, society_factory3, society_factory_all)
+    data = sum_score(data, society_factory1, society_factory2, society_factory3, society_factory_all)
     n = n + 4
 
     """
         犯罪思维与同伴量表  
     """
-    reverse_order = np.array([25, 28, 31, 35, 39, 41, 45]) + 70 - 1
+    reverse_order = np.array([25, 28, 31, 35, 39, 41, 45]) + 73 - 1
     data = p.reverce_score(data, reverse_order, 1)
-    mind = np.array((range(1, 47))) + 70 - 1
-    data = p.sum_score(data, mind)
+    mind = np.array((range(1, 47))) + 73 - 1
+    data = sum_score(data, mind)
     n = n + 1
 
     """
         反社会人格障碍  >=3
     """
-    society = np.array((range(1, 8))) + 116 - 1
-    data = p.sum_score(data, society)
+    society = np.array((range(1, 8))) + 119 - 1
+    data = sum_score(data, society)
     n = n + 1
 
     #---------------------------生成数据并求维度的和完毕-------------------------------------------

@@ -93,7 +93,7 @@ if __name__ == '__main__':
     """
        短式黑暗三联征:马基雅维利主义人格[1,10)
     """
-    three_feature_factor = (np.array(range(1, 10)))
+    three_feature_factor = (np.array(range(1, 10)))+3
     # 记分求和  短式黑暗三联征:马基雅维利主义人格
     title = np.array(["短式黑暗三联征:马基雅维利主义"])
     n = n + len(title)
@@ -102,8 +102,8 @@ if __name__ == '__main__':
     """
         奖励/惩罚敏感性问卷
     """
-    sensitive = np.array(range(1,49,2))+10-1   #惩罚敏感
-    sensitive2 = np.array(range(2,49,2))+10-1   #奖励敏感
+    sensitive = np.array(range(1,49,2))+13-1   #惩罚敏感
+    sensitive2 = np.array(range(2,49,2))+13-1   #奖励敏感
     title2 = np.array(["个体对惩罚信息敏感","个体对奖励信息敏感"])
     data = p.sum_score(data, sensitive,sensitive2)
     table = np.hstack((table, title2))
@@ -112,11 +112,11 @@ if __name__ == '__main__':
     """
         领悟社会支持
     """
-    reverse_order = np.array([3, 4, 8, 11, 6, 7, 9, 12, 1, 2, 5, 10]) +58-1
+    reverse_order = np.array([3, 4, 8, 11, 6, 7, 9, 12, 1, 2, 5, 10]) +61-1
     data = p.reverce_score(data, reverse_order, 7)
-    society_factory1 = np.array([3, 4, 8, 11]) + 58 - 1
-    society_factory2 = np.array([6, 7, 9, 12]) + 58 - 1
-    society_factory3 = np.array([1, 2, 5, 10]) + 58 - 1
+    society_factory1 = np.array([3, 4, 8, 11]) + 61 - 1
+    society_factory2 = np.array([6, 7, 9, 12]) + 61 - 1
+    society_factory3 = np.array([1, 2, 5, 10]) + 61 - 1
     society_factory_all = np.concatenate((society_factory1, society_factory2, society_factory3), axis=0)
     title3 = np.array(["领悟社会支持:缺乏家庭支持", "领悟社会支持:缺乏朋友支持", "领悟社会支持:缺乏其他支持", "个体整体的社会支持低"])
     data = p.sum_score(data, society_factory1, society_factory2, society_factory3, society_factory_all)
@@ -127,9 +127,9 @@ if __name__ == '__main__':
     """
         犯罪思维与同伴量表  
     """
-    reverse_order = np.array([25,28,31,35,39,41,45])+70-1
+    reverse_order = np.array([25,28,31,35,39,41,45])+73-1
     data = p.reverce_score(data, reverse_order, 1)
-    mind=np.array((range(1,47)))+70-1
+    mind=np.array((range(1,47)))+73-1
     title4=np.array(["犯罪思维与同伴量表"])
     data = p.sum_score(data, mind)
     table = np.hstack((table, title4))
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     """
         反社会人格障碍  >=3
     """
-    society=np.array((range(1,8)))+116-1
+    society=np.array((range(1,8)))+119-1
     title5=np.array(["反社会人格障碍"])
     data = p.sum_score(data, society)
     table = np.hstack((table, title5))
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     # 3.5打标签之前做一次统计,并存入表格,便于后续生成其他的数据
     # 生成统计意义上的{feature:均值,方差,min,max,基本信息:[基本信息集合],维度的标签阈值:[即大维度和小维度的得分阈值界限,超过即需要打标签]}
     static_map = {}
-    static_map = p.static(static_map, data, table, 0, 1, 1, 123)
+    static_map = p.static(static_map, data, table, 0, 4, 4, 126)
     # 返回static_map后,还差各个大小维度总和的阈值,在步骤4中添加
 
      #4.打标签
@@ -156,8 +156,8 @@ if __name__ == '__main__':
 
     # 5.建表
     drug_table_name = config.get_tablename("drug_name")
-    sql_createTb = "create table {} (id int primary key auto_increment,data_type int(1) ,`{}`char(20) not null default ''," + "`{}` char(20) not null default ''," * (
-                len(table) - 2) + "{} text(500))CHARSET=utf8;"
+    sql_createTb = "create table {} (id int primary key auto_increment,data_type int(1) ,`{}`char(20) not null default ''," + "`{}` char(40) not null default ''," * (
+                len(table) - 2) + "{} text(1000))CHARSET=utf8;"
     sql_createTb = sql_createTb.format(drug_table_name, *table)
     print(table)
     print(sql_createTb)
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         except:
             sql_insert = sql_insert.format(drug_table_name, *adata, "无")
         print(sql_insert)
-        # con.insert(sql_insert)
+        con.insert(sql_insert)
     # print(data)  # {key(编号),value:数据}
 
     # 7.保存table用于提供web接口

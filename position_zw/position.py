@@ -81,7 +81,7 @@ def sum_score(data,*items):
     :return:
     """
     # print(items)
-    for key in data:
+    for key in data.keys():
         inner_arr=[] #一个犯人的得分
         adata=data[key]
         for i in range(len(items)):
