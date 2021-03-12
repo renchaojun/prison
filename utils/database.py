@@ -51,3 +51,27 @@ class DB():
         mydb.commit()
         mydb.close()
         return data
+    def add(self,sql): #查看是否含有描述那列
+        mydb = self.get_connetion()
+        mycursor = mydb.cursor()
+        try:
+            mycursor.execute(sql)
+            mydb.commit()
+            print("添加列成功")
+        except Exception:  # 方法一：捕获所有异常
+            # 如果发生异常，则回滚
+            print("发生异常", Exception)
+            mydb.rollback()
+        mydb.close()
+    def updata(self,sql): #查看是否含有描述那列
+        mydb = self.get_connetion()
+        mycursor = mydb.cursor()
+        try:
+            mycursor.execute(sql)
+            mydb.commit()
+            print("更新成功")
+        except Exception:  # 方法一：捕获所有异常
+            # 如果发生异常，则回滚
+            print("发生异常", Exception)
+            mydb.rollback()
+        mydb.close()

@@ -62,6 +62,7 @@ class Handler:
     async def handle_plan(self, request):
         txt={}
         flag = request.match_info.get('flag')
+        print(flag)
         if flag in flag_method.keys():
             txt["flag"]=flag
             methods=flag_method[flag]
@@ -83,6 +84,7 @@ handler = Handler()
 app = web.Application()
 table=["thieves","position","fraudsters","drug","traffic","rape","rob","damage","intentkill"]
 flag_method=s.load_json(curPath.mainPath() + "/temp_file/flag_method.json")
+print(flag_method.keys())
 method_plan=s.load_json(curPath.mainPath() + "/temp_file/method_plan.json")
 app.add_routes([web.get('/prisoners', handler.handle_intro),
                 web.get('/prisoners/flag={flag}', handler.handle_plan),
